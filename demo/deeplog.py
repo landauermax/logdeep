@@ -14,9 +14,9 @@ from logdeep.tools.utils import *
 # Config Parameters
 
 options = dict()
-options['data_dir'] = '../data/'
+options['data_dir'] = '../data/hdfs_xu/'
 options['window_size'] = 10
-options['device'] = "cpu"
+options['device'] = "cuda"
 
 # Smaple
 options['sample'] = "sliding_window"
@@ -33,7 +33,7 @@ options['feature_num'] = sum(
 options['input_size'] = 1
 options['hidden_size'] = 64
 options['num_layers'] = 2
-options['num_classes'] = 28
+options['num_classes'] = 33
 
 # Train
 options['batch_size'] = 2048
@@ -71,7 +71,7 @@ def predict():
                     num_layers=options['num_layers'],
                     num_keys=options['num_classes'])
     predicter = Predicter(Model, options)
-    predicter.predict_unsupervised()
+    return predicter.predict_unsupervised()
 
 
 if __name__ == "__main__":

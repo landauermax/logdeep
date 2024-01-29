@@ -26,6 +26,7 @@ class Trainer():
         self.data_dir = options['data_dir']
         self.window_size = options['window_size']
         self.batch_size = options['batch_size']
+        self.num_keys = options['num_classes']
 
         self.device = options['device']
         self.lr_step = options['lr_step']
@@ -43,11 +44,13 @@ class Trainer():
         if self.sample == 'sliding_window':
             train_logs, train_labels = sliding_window(self.data_dir,
                                                   datatype='train',
-                                                  window_size=self.window_size)
+                                                  window_size=self.window_size,
+                                                  num_keys=self.num_keys)
             val_logs, val_labels = sliding_window(self.data_dir,
                                               datatype='val',
                                               window_size=self.window_size,
-                                              sample_ratio=0.001)
+                                              sample_ratio=0.001,
+                                              num_keys=self.num_keys)
         elif self.sample == 'session_window':
             train_logs, train_labels = session_window(self.data_dir,
                                                       datatype='train')

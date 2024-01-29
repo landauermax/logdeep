@@ -45,7 +45,7 @@ class loganomaly(nn.Module):
             torch.zeros(self.hidden_size, self.attention_size))
         self.u_omega = Variable(torch.zeros(self.attention_size))
 
-        self.sequence_length = 28
+        self.sequence_length = num_keys
 
     def attention_net(self, lstm_output):
         output_reshape = torch.Tensor.reshape(lstm_output,

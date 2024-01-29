@@ -39,7 +39,7 @@ def down_sample(logs, labels, sample_ratio):
     return sample_logs, sample_labels
 
 
-def sliding_window(data_dir, datatype, window_size, sample_ratio=1):
+def sliding_window(data_dir, datatype, window_size, num_keys, sample_ratio=1):
     '''
     dataset structure
         result_logs(dict):
@@ -48,44 +48,48 @@ def sliding_window(data_dir, datatype, window_size, sample_ratio=1):
             ...
         labels(list)
     '''
-    event2semantic_vec = read_json(data_dir + 'hdfs/event2semantic_vec.json')
+    #event2semantic_vec = read_json(data_dir + 'event2semantic_vec.json')
     num_sessions = 0
     result_logs = {}
     result_logs['Sequentials'] = []
     result_logs['Quantitatives'] = []
-    result_logs['Semantics'] = []
+    #result_logs['Semantics'] = []
     labels = []
     if datatype == 'train':
-        data_dir += 'hdfs/hdfs_train'
+        data_dir += data_dir.split('/')[-2].split('_')[0] + '_train'
     if datatype == 'val':
-        data_dir += 'hdfs/hdfs_test_normal'
+        data_dir += data_dir.split('/')[-2].split('_')[0] + '_test_normal'
 
     with open(data_dir, 'r') as f:
         for line in f.readlines():
             num_sessions += 1
+            if ',' in line:
+                # Remove sequence identifier if available
+                line = line.split(',')[1]
             line = tuple(map(lambda n: n - 1, map(int, line.strip().split())))
+            line = tuple([-1] * window_size) + line
 
             for i in range(len(line) - window_size):
                 Sequential_pattern = list(line[i:i + window_size])
-                Quantitative_pattern = [0] * 28
+                Quantitative_pattern = [0] * num_keys
                 log_counter = Counter(Sequential_pattern)
 
                 for key in log_counter:
                     Quantitative_pattern[key] = log_counter[key]
                 Semantic_pattern = []
-                for event in Sequential_pattern:
-                    if event == 0:
-                        Semantic_pattern.append([-1] * 300)
-                    else:
-                        Semantic_pattern.append(event2semantic_vec[str(event -
-                                                                       1)])
+                #for event in Sequential_pattern:
+                #    if event == 0:
+                #        Semantic_pattern.append([-1] * 300)
+                #    else:
+                #        Semantic_pattern.append(event2semantic_vec[str(event -
+                #                                                       1)])
                 Sequential_pattern = np.array(Sequential_pattern)[:,
                                                                   np.newaxis]
                 Quantitative_pattern = np.array(
                     Quantitative_pattern)[:, np.newaxis]
                 result_logs['Sequentials'].append(Sequential_pattern)
                 result_logs['Quantitatives'].append(Quantitative_pattern)
-                result_logs['Semantics'].append(Semantic_pattern)
+                #result_logs['Semantics'].append(Semantic_pattern)
                 labels.append(line[i + window_size])
 
     if sample_ratio != 1:
@@ -99,7 +103,7 @@ def sliding_window(data_dir, datatype, window_size, sample_ratio=1):
 
 
 def session_window(data_dir, datatype, sample_ratio=1):
-    event2semantic_vec = read_json(data_dir + 'hdfs/event2semantic_vec.json')
+    event2semantic_vec = read_json(data_dir + 'event2semantic_vec.json')
     result_logs = {}
     result_logs['Sequentials'] = []
     result_logs['Quantitatives'] = []
@@ -107,11 +111,11 @@ def session_window(data_dir, datatype, sample_ratio=1):
     labels = []
 
     if datatype == 'train':
-        data_dir += 'hdfs/robust_log_train.csv'
+        data_dir += 'robust_log_train.csv'
     elif datatype == 'val':
-        data_dir += 'hdfs/robust_log_valid.csv'
+        data_dir += 'robust_log_valid.csv'
     elif datatype == 'test':
-        data_dir += 'hdfs/robust_log_test.csv'
+        data_dir += 'robust_log_test.csv'
 
     train_df = pd.read_csv(data_dir)
     for i in tqdm(range(len(train_df))):

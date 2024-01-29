@@ -16,7 +16,7 @@ from logdeep.tools.utils import *
 options = dict()
 options['data_dir'] = '../data/'
 options['window_size'] = 10
-options['device'] = "cpu"
+options['device'] = "cuda"
 
 # Smaple
 options['sample'] = "sliding_window"
@@ -50,7 +50,7 @@ options['model_name'] = "loganomaly"
 options['save_dir'] = "../result/loganomaly/"
 
 # Predict
-options['model_path'] = "../result/loganomaly/loganomaly_epoch299.pth"
+options['model_path'] = "../result/loganomaly/loganomaly_last.pth"
 options['num_candidates'] = 9
 
 seed_everything(seed=1234)
@@ -71,7 +71,7 @@ def predict():
                        num_layers=options['num_layers'],
                        num_keys=options['num_classes'])
     predicter = Predicter(Model, options)
-    predicter.predict_unsupervised()
+    return predicter.predict_unsupervised()
 
 
 if __name__ == "__main__":

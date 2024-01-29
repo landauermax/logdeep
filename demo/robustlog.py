@@ -16,7 +16,7 @@ from logdeep.tools.utils import *
 options = dict()
 options['data_dir'] = '../data/'
 options['window_size'] = 10
-options['device'] = "cpu"
+options['device'] = "cuda"
 
 # Smaple
 options['sample'] = "session_window"
