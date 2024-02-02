@@ -121,6 +121,8 @@ class Predicter():
                 for i in range(len(line) - self.window_size):
                     seq0 = line[i:i + self.window_size]
                     label = line[i + self.window_size]
+                    if label == -1:
+                        continue
                     seq1 = [0] * self.num_classes
                     log_conuter = Counter(seq0)
                     for key in log_conuter:
@@ -136,6 +138,13 @@ class Predicter():
                     cand_anom = set()
                     for num_cand in num_cand_no_anom:
                         if label not in predicted[-num_cand:]:
+                            #print(str(label) + ' not in ' + str(predicted[-num_cand:].tolist()))
+                            #if label == -1:
+                            #    print(i)
+                            #    print(line)
+                            #    print(line[i + self.window_size])
+                            #else:
+                            #    print('FP: ' + str(label) + ' only predicted at pos ' + str(len(predicted.tolist()) - predicted.tolist().index(label)))
                             FP[num_cand] += test_normal_loader[line]
                             cand_anom.add(num_cand)
                         #break

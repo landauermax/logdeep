@@ -75,7 +75,12 @@ def sliding_window(data_dir, datatype, window_size, num_keys, sample_ratio=1):
                 log_counter = Counter(Sequential_pattern)
 
                 for key in log_counter:
-                    Quantitative_pattern[key] = log_counter[key]
+                    #print(key)
+                    try:
+                        Quantitative_pattern[key] = log_counter[key]
+                    except IndexError as e:
+                        print(e)
+                        print('Found key ' + str(key) + ' but num_keys is only ' + str(num_keys))
                 Semantic_pattern = []
                 #for event in Sequential_pattern:
                 #    if event == 0:

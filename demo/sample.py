@@ -20,7 +20,7 @@ if source in ['adfa_verazuo', 'hdfs_xu', 'hdfs_loghub', 'openstack_loghub', 'ope
     # Only BGL and Thunderbird should be used with time-window based grouping
     print('WARNING: Using time-window grouping, even though session-based grouping is recommended for this data set.')
 
-def do_sample(source, train_ratio):
+def do_sample(source, train_ratio, sample_ratio):
     header = True
     sequences_extracted = {}
     tw_groups = {} # Only used for time-window based grouping
@@ -84,6 +84,15 @@ def do_sample(source, train_ratio):
                 if tw_labels[time_group] not in sequences_extracted:
                     sequences_extracted[tw_labels[time_group]] = {}
                 sequences_extracted[tw_labels[time_group]][time_group] = event_sequence
+        seq_tmp = {}
+        for lbl, seqs in sequences_extracted.items():
+            seq_tmp[lbl] = {}
+            for seq_id, seq in seqs.items():
+                if len(seq) < 100000:
+                    seq_tmp[lbl][seq_id] = seq
+                else:
+                    print('Skip sequence of length ' + str(len(seq)))
+        sequences_extracted = seq_tmp
         num_seq_anom = 0
         for lbl, seqs in sequences_extracted.items():
             if lbl == 'Normal':
@@ -130,4 +139,4 @@ def do_sample(source, train_ratio):
                         test_abnormal.write(str(seq_id) + ',' + ' '.join([str(event) for event in event_list]) + '\n')
 
 if __name__ == "__main__":
-    do_sample(source, train_ratio)
+    do_sample(source, train_ratio, sample_ratio)
