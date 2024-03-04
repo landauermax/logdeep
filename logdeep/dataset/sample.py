@@ -38,6 +38,43 @@ def down_sample(logs, labels, sample_ratio):
         del all_index[random_index]
     return sample_logs, sample_labels
 
+def load_features(data_path, only_normal=True, min_len=0):
+    with open(data_path, 'rb') as f:
+        data = pickle.load(f)
+    if only_normal:
+        logs = []
+        for seq in data:
+            if len(seq['EventId']) < min_len:
+                continue
+            if not isinstance(seq['Label'], int):
+                label = max(seq['Label'].tolist())
+            else:
+                label = seq['Label']
+            if label == 0:
+                try:
+                    logs.append((seq['EventId'], label, seq['Seq'].tolist()))
+                except:
+                    logs.append((seq['EventId'], label, seq['Seq']))
+    else:
+        logs = []
+        no_abnormal = 0
+        for seq in data:
+            if len(seq['EventId']) < min_len:
+                continue
+            if not isinstance(seq['Label'], int):
+                label = seq['Label'].tolist()
+                if max(label) > 0:
+                    no_abnormal += 1
+            else:
+                label = seq['Label']
+                if label > 0:
+                    no_abnormal += 1
+            try:
+                logs.append((seq['EventId'], label, seq['Seq'].tolist()))
+            except:
+                logs.append((seq['EventId'], label, seq['Seq']))
+        print("Number of abnormal sessions:", no_abnormal)
+    return logs
 
 def sliding_window(data_dir, datatype, window_size, num_keys, sample_ratio=1):
     '''
@@ -62,6 +99,8 @@ def sliding_window(data_dir, datatype, window_size, num_keys, sample_ratio=1):
 
     with open(data_dir, 'r') as f:
         for line in f.readlines():
+            #if datatype == 'val' and num_sessions > 10:
+            #    break
             num_sessions += 1
             if ',' in line:
                 # Remove sequence identifier if available
@@ -81,13 +120,12 @@ def sliding_window(data_dir, datatype, window_size, num_keys, sample_ratio=1):
                     except IndexError as e:
                         print(e)
                         print('Found key ' + str(key) + ' but num_keys is only ' + str(num_keys))
-                Semantic_pattern = []
+                #Semantic_pattern = []
                 #for event in Sequential_pattern:
-                #    if event == 0:
+                #    if event <= 0:
                 #        Semantic_pattern.append([-1] * 300)
                 #    else:
-                #        Semantic_pattern.append(event2semantic_vec[str(event -
-                #                                                       1)])
+                #        Semantic_pattern.append(event2semantic_vec[str(event - 1)])
                 Sequential_pattern = np.array(Sequential_pattern)[:,
                                                                   np.newaxis]
                 Quantitative_pattern = np.array(

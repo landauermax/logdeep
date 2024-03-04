@@ -5,7 +5,7 @@ import math
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--data_dir", default="hdfs_xu", help="path to input files", type=str, choices=['adfa_verazuo', 'hdfs_xu', 'hdfs_loghub', 'bgl_loghub', 'bgl_cfdr', 'openstack_loghub', 'openstack_parisakalaki', 'hadoop_loghub', 'thunderbird_cfdr', 'awsctd_djpasco'])
+parser.add_argument("--data_dir", default="hdfs_xu", help="path to input files", type=str)#, choices=['adfa_verazuo', 'hdfs_xu', 'hdfs_loghub', 'bgl_loghub', 'bgl_cfdr', 'openstack_loghub', 'openstack_parisakalaki', 'hadoop_loghub', 'thunderbird_cfdr', 'awsctd_djpasco'])
 parser.add_argument("--train_ratio", default=0.01, help="fraction of normal data used for training", type=float)
 parser.add_argument("--time_window", default=None, help="size of the fixed time window in seconds (setting this parameter replaces session-based with window-based grouping)", type=float)
 parser.add_argument("--sample_ratio", default=1.0, help="fraction of data sampled from normal and anomalous events", type=float)
@@ -20,7 +20,7 @@ if source in ['adfa_verazuo', 'hdfs_xu', 'hdfs_loghub', 'openstack_loghub', 'ope
     # Only BGL and Thunderbird should be used with time-window based grouping
     print('WARNING: Using time-window grouping, even though session-based grouping is recommended for this data set.')
 
-def do_sample(source, train_ratio, sample_ratio):
+def do_sample(source, train_ratio, sample_ratio, tw):
     header = True
     sequences_extracted = {}
     tw_groups = {} # Only used for time-window based grouping
@@ -85,14 +85,19 @@ def do_sample(source, train_ratio, sample_ratio):
                     sequences_extracted[tw_labels[time_group]] = {}
                 sequences_extracted[tw_labels[time_group]][time_group] = event_sequence
         seq_tmp = {}
-        for lbl, seqs in sequences_extracted.items():
-            seq_tmp[lbl] = {}
-            for seq_id, seq in seqs.items():
-                if len(seq) < 100000:
-                    seq_tmp[lbl][seq_id] = seq
-                else:
-                    print('Skip sequence of length ' + str(len(seq)))
-        sequences_extracted = seq_tmp
+        suitable_for_train = set()
+        #print(str(len(sequences_extracted["Normal"])) + ' sequences before filtering')
+        #for lbl, seqs in sequences_extracted.items():
+        #    seq_tmp[lbl] = {}
+        #    for seq_id, seq in seqs.items():
+        #        #if len(seq) < 5000 and lbl == "Normal":
+        #        #    suitable_for_train.add(seq_id)
+        #        if lbl != "Normal" or len(seq) < 10000:
+        #            seq_tmp[lbl][seq_id] = seq
+        #        #else:
+        #        #    print('Skip sequence of length ' + str(len(seq)))
+        #sequences_extracted = seq_tmp
+        #print(str(len(sequences_extracted["Normal"])) + ' sequences after filtering')
         num_seq_anom = 0
         for lbl, seqs in sequences_extracted.items():
             if lbl == 'Normal':
@@ -116,7 +121,8 @@ def do_sample(source, train_ratio, sample_ratio):
             print('Sampled ' + str(len(sequences_extracted['Normal'])) + ' normal and ' + str(num_sampled_anom) + ' anomalous sequences')
         num_train_logs = math.ceil(train_ratio * len(sequences_extracted['Normal']))
         print('Randomly selecting ' + str(num_train_logs) + ' sequences from ' + str(len(sequences_extracted['Normal'])) + ' normal sequences for training')
-        train_seq_id_list = random.sample(list(sequences_extracted['Normal'].keys()), num_train_logs)
+        train_seq_id_list = set(random.sample(list(sequences_extracted['Normal'].keys()), num_train_logs))
+        #train_seq_id_list = random.sample(list(suitable_for_train), num_train_logs) #.intersection(set(sequences_extracted['Normal'].keys()))), num_train_logs)
         print('Write vector files ...')
         cnt = 0
         for label, seq_id_dict in sequences_extracted.items():
@@ -133,10 +139,10 @@ def do_sample(source, train_ratio, sample_ratio):
                 for seq_id, event_list in seq_id_dict.items():
                     test_abnormal.write(str(seq_id) + ',' + ' '.join([str(event) for event in event_list]) + '\n')
             else:
-                with open(source + '/' + source.split('_')[0] + '_test_abnormal_' + label, 'w+') as test_label:
+                with open(source + '/' + source.split('/')[-1].split('_')[0] + '_test_abnormal_' + label, 'w+') as test_label:
                     for seq_id, event_list in seq_id_dict.items():
                         test_label.write(str(seq_id) + ',' + ' '.join([str(event) for event in event_list]) + '\n')
                         test_abnormal.write(str(seq_id) + ',' + ' '.join([str(event) for event in event_list]) + '\n')
 
 if __name__ == "__main__":
-    do_sample(source, train_ratio, sample_ratio)
+    do_sample(source, train_ratio, sample_ratio, tw)
