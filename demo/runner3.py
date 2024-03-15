@@ -5,7 +5,7 @@ import sample
 import sample_shuffle
 import time
 
-def repeat(data_dir, model, num_classes, num_candidates, iterations, train_ratio, out):
+def repeat(data_dir, model, num_classes, num_candidates, iterations, train_ratio, out, tw):
     dataset = data_dir.split('/')[-2]
     for i in range(iterations):
         print(data_dir + ': Iteration ' + str(i) + ' ... ')
@@ -16,12 +16,12 @@ def repeat(data_dir, model, num_classes, num_candidates, iterations, train_ratio
             # If you run into a CUDA memory error when processing Thunderbird, you may have to run the following command:
             # export 'PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512'
             # Use the following for sampling when sequence identifiers are used
-            sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, 0.2, 0.05, None) # Since only a n-th of the data is selected, need to take n * 1% of training data to train on the same number of sequences
+            sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, 0.2, 0.05, tw) # Since only a n-th of the data is selected, need to take n * 1% of training data to train on the same number of sequences
             # Use the following for sampling when time-windows are used
             #sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, 0.2, 0.05, 1800)
         else:
             # Use the following for shuffling when sequence identifiers are used
-            sample_shuffle.do_sample('/home/ubuntu/logdeep/data/' + dataset, train_ratio)
+            sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, train_ratio, 1, tw)
             # Use the following for sampling when time-windows are used
             #sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, train_ratio, 1, 1800)
             #sample.do_sample('/home/ubuntu/logdeep/data/' + dataset, train_ratio, 1, None)
@@ -64,7 +64,19 @@ def repeat(data_dir, model, num_classes, num_candidates, iterations, train_ratio
 csv_columns = ['tp', 'fp', 'tn', 'fn', 'tpr', 'fpr', 'tnr', 'p', 'f1', 'acc', 'threshold', 'name', 'time']
 with open('runner_result3.csv', 'w+') as out:
     out.write('data_dir,iteration,' + ','.join(csv_columns) + '\n')
-    repeat("../data/bgl_cfdr/", "deeplog", 401, 100, 25, 0.01, out)
+    #repeat("../data/hdfs_xu/", "deeplog", 33, 30, 1, 0.01, out, None)
+    #repeat("../data/hdfs_xu/", "loganomaly", 33, 30, 1, 0.01, out, None)
+    #repeat("../data/bgl_cfdr/", "deeplog", 401, 100, 1, 0.01, out, None)
+    #repeat("../data/bgl_cfdr/", "loganomaly", 401, 100, 1, 0.01, out, None)
+    #repeat("../data/thunderbird_cfdr/", "deeplog", 6425, 100, 1, 0.1, out, None)
+    #repeat("../data/thunderbird_cfdr/", "loganomaly", 6425, 100, 1, 0.1, out, None)
+    repeat("../data/hadoop_loghub/", "deeplog", 349, 30, 1, 0.1, out, None)
+    repeat("../data/hadoop_loghub/", "loganomaly", 349, 30, 1, 0.1, out, None)
+    repeat("../data/bgl_cfdr/", "deeplog", 401, 100, 1, 0.01, out, 1800)
+    repeat("../data/bgl_cfdr/", "loganomaly", 401, 100, 1, 0.01, out, 1800)
+    #repeat("../data/thunderbird_cfdr/", "deeplog", 6425, 100, 1, 0.1, out, 1800)
+    #repeat("../data/thunderbird_cfdr/", "loganomaly", 6425, 100, 1, 0.1, out, 1800)
+    #repeat("../data/bgl_cfdr/", "deeplog", 401, 100, 25, 0.01, out)
     #repeat("../data/bgl_cfdr/", "loganomaly", 401, 100, 25, 0.01, out)
     #repeat("../data/hdfs_xu/", "loganomalysem", 33, 10, 1, 0.01, out)
     #repeat("../data/hdfs_logdeep/", "deeplog", 28, 50, 1, None, out)
